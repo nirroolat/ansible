@@ -1,0 +1,4 @@
+object Host "{{ ansible_nodename }}" {
+        import "satellite-host"
+        check_command = "cluster-zone"
+}

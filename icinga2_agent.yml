@@ -1,0 +1,9 @@
+- hosts: icinga2_agents !{{ icinga2_master }}
+  roles:
+    - { role: icinga2_agent }
+
+- hosts: {{ icinga2_master }}
+  tasks:
+   - name: Restart icinga2
+     service: name=icinga2 state=reloaded
+

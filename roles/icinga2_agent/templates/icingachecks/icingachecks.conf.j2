@@ -1,0 +1,90 @@
+object Service "disk" {
+        import "satellite-service"
+        check_command = "dummy"
+        host_name = "{{ ansible_nodename }}"
+        zone = "{{ ansible_nodename }}"
+}
+
+object Service "disk /" {
+        import "satellite-service"
+        check_command = "dummy"
+        host_name = "{{ ansible_nodename }}"
+        zone = "{{ ansible_nodename }}"
+}
+
+object Service "icinga" {
+        import "satellite-service"
+        check_command = "dummy"
+        host_name = "{{ ansible_nodename }}"
+        zone = "{{ ansible_nodename }}"
+}
+
+object Service "load" {
+        import "satellite-service"
+        check_command = "dummy"
+        host_name = "{{ ansible_nodename }}"
+        zone = "{{ ansible_nodename }}"
+}
+
+object Service "ping4" {
+        import "satellite-service"
+        check_command = "dummy"
+        host_name = "{{ ansible_nodename }}"
+        zone = "{{ ansible_nodename }}"
+}
+
+object Service "ping6" {
+        import "satellite-service"
+        check_command = "dummy"
+        host_name = "{{ ansible_nodename }}"
+        zone = "{{ ansible_nodename }}"
+}
+
+object Service "procs" {
+        import "satellite-service"
+        check_command = "dummy"
+        host_name = "{{ ansible_nodename }}"
+        zone = "{{ ansible_nodename }}"
+}
+
+object Service "ssh" {
+        import "satellite-service"
+        check_command = "dummy"
+        host_name = "{{ ansible_nodename }}"
+        zone = "{{ ansible_nodename }}"
+}
+
+object Service "users" {
+        import "satellite-service"
+        check_command = "dummy"
+        host_name = "{{ ansible_nodename }}"
+        zone = "{{ ansible_nodename }}"
+}
+
+object Service "mem" {
+        import "satellite-service"
+        check_command = "dummy"
+        host_name = "{{ ansible_nodename }}"
+        zone = "{{ ansible_nodename }}"
+}
+
+object Service "iostat" {
+        import "satellite-service"
+        check_command = "dummy"
+        host_name = "{{ ansible_nodename }}"
+        zone = "{{ ansible_nodename }}"
+}
+
+object Service "bandwidth" {
+        import "satellite-service"
+        check_command = "dummy"
+        host_name = "{{ ansible_nodename }}"
+        zone = "{{ ansible_nodename }}"
+}
+
+object Service "swap" {
+        import "satellite-service"
+        check_command = "dummy"
+        host_name = "{{ ansible_nodename }}"
+        zone = "{{ ansible_nodename }}"
+}

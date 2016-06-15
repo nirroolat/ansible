@@ -1,0 +1,104 @@
+/* Command objects */
+
+object NotificationCommand "mail-host-notification" {
+  import "plugin-notification-command"
+
+  command = [ SysconfDir + "/icinga2/scripts/mail-host-notification.sh" ]
+
+  env = {
+    NOTIFICATIONTYPE = "$notification.type$"
+    HOSTALIAS = "$host.display_name$"
+    HOSTADDRESS = "$address$"
+    HOSTSTATE = "$host.state$"
+    LONGDATETIME = "$icinga.long_date_time$"
+    HOSTOUTPUT = "$host.output$"
+    NOTIFICATIONAUTHORNAME = "$notification.author$"
+    NOTIFICATIONCOMMENT = "$notification.comment$"
+    HOSTDISPLAYNAME = "$host.display_name$"
+    USEREMAIL = "$user.email$"
+  }
+}
+
+object NotificationCommand "mail-service-notification" {
+  import "plugin-notification-command"
+
+  command = [ SysconfDir + "/icinga2/scripts/mail-service-notification.sh" ]
+
+  env = {
+    NOTIFICATIONTYPE = "$notification.type$"
+    SERVICEDESC = "$service.name$"
+    HOSTALIAS = "$host.display_name$"
+    HOSTADDRESS = "$address$"
+    SERVICESTATE = "$service.state$"
+    LONGDATETIME = "$icinga.long_date_time$"
+    SERVICEOUTPUT = "$service.output$"
+    NOTIFICATIONAUTHORNAME = "$notification.author$"
+    NOTIFICATIONCOMMENT = "$notification.comment$"
+    HOSTDISPLAYNAME = "$host.display_name$"
+    SERVICEDISPLAYNAME = "$service.display_name$"
+    USEREMAIL = "$user.email$"
+  }
+}
+
+
+object CheckCommand "mem" {
+  import "plugin-check-command"
+
+  command = [ PluginDir + "/check_mem.pl" ]
+
+  arguments = {
+    "-u" = {
+        set_if = "$mem_used$"
+        description = "Check USED memory"
+    }
+    "-f" = {
+        set_if = "$mem_free$"
+        description = "Check FREE memory"
+    }
+    "-C" = {
+        set_if = "$mem_cache$"
+        description = "Count OS caches as FREE memory"
+    }
+    "-w" = {
+        value = "$mem_warning$"
+        description = "Percent free/used when to warn"
+    }
+    "-c" = {
+        value = "$mem_critical$"
+        description = "Percent free/used when critical"
+    }
+  }
+
+  vars.mem_used = false
+  vars.mem_free = true
+  vars.mem_cache = true
+  vars.mem_warning = 20
+  vars.mem_critical = 10
+}
+
+object CheckCommand "iostat" {
+  import "plugin-check-command"
+
+  command = [ PluginDir + "/check_iostat" ]
+
+  arguments = {
+   "-d" = "{{disktobemonitored.stdout}}"
+   "-w" = "200,100000,100000"
+   "-c" = "300,200000,200000"
+  }
+}
+ 
+object CheckCommand "bandwidth" {
+  import "plugin-check-command"
+
+  command = [ PluginDir + "/check_bandwidth" ]
+
+  arguments = {
+   "-H" = "{{ ansible_nodename }}"
+   "-C" = "{{ snmpcommunitylinux }}"
+   "-i" = "2"
+   "-w" = "1000000"
+   "-c" = "2000000"
+  }
+
+}

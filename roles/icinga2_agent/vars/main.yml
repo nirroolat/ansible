@@ -1,0 +1,6 @@
+---
+# vars file for icinga2_agent
+icinga2_master: addressforicinga2.server.com
+icinga2_port: 5665
+pki_dir: /etc/icinga2/pki
+snmpcommunitylinux: insteryoursnmppasswordhere

@@ -1,0 +1,7 @@
+---
+# handlers file for icinga2_server
+- name: restart icinga2
+  service: name=icinga2 state=restarted enabled=yes
+
+- name: restart apache
+  service: name=httpd state=restarted enabled=yes

@@ -1,0 +1,26 @@
+---
+- hosts: vmware
+  connection: local
+  vars_prompt:
+   - name: "vm_name"
+     prompt: "Enter name for new VM"
+     private: no
+ 
+   - name: "datastore"
+     prompt: "Choose datastore"
+     private: no 
+
+   - name: "size_gb"
+     prompt: "Please enter size of disk (in GB)"
+     private: no
+
+   - name: "memory_mb"
+     prompt: "Please the amount of RAM to dedicate to this VM (in MB)"
+     private: no
+  
+   - name: "cpu_count"
+     prompt: "Please enter the number of vCPUs for this VM (Max 8)"
+     private: no
+
+  roles:
+   - role: vmdeploy

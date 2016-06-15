@@ -1,0 +1,6 @@
+object Host "{{ ansible_nodename }}" {
+  import "generic-host"
+  address = "{{ ansible_nodename }}"
+  vars.ldap_address = "{{ ansible_nodename }}"
+  vars.os = "Linux"
+}

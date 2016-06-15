@@ -1,0 +1,6 @@
+---
+#playbook for icinga2_server
+- hosts: {{ icinga2_master }}
+  roles:
+    - role: icinga2_server
+  

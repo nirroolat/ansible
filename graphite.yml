@@ -1,0 +1,6 @@
+---
+#playbook for graphite
+- hosts: {{ icinga2_master }}
+  roles:
+    - role: graphite
+  

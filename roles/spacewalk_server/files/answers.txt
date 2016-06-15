@@ -1,0 +1,17 @@
+admin-email = nirro@nirro.net
+ssl-set-org = Nirro.net
+ssl-set-org-unit = spacewalk.nirro.net
+ssl-set-city = WestCovina
+ssl-set-state = CA
+ssl-set-country = US
+ssl-password = jhUXznI6jwV1jDX8ZebC
+ssl-set-email = nirro@nirro.net
+ssl-config-sslvhost = Y
+db-backend=postgresql
+db-name=rhnschema
+db-user=spacewalkdbuser
+db-password=DbUqOt18skovJobp2sSq
+db-host=localhost
+db-port=5432
+satellite-cert-file = /usr/share/spacewalk/setup/spacewalk-public.cert
+enable-tftp=Y

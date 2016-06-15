@@ -1,0 +1,71 @@
+---
+# tasks file for spacewalk_server
+- name: Checks if Spacewalk is installed
+  stat: path=/var/lib/pgsql/data/base
+  register: spacewalk_installed
+
+- name: Install EPEL Repo
+  yum: name=epel-release state=present
+
+- name: Copy jpackage-generic.repo to /etc/yum.repos.d/
+  copy: src=jpackage-generic.repo dest=/etc/yum.repos.d/jpackage-generic.repo owner=root group=root mode=0744
+
+- name: Copy answersfile to /tmp/answers.txt
+  copy: src=answers.txt dest=/tmp/answers.txt
+
+- name: Add Spacewalk repo for Centos 7 and other Dependencies
+  yum: pkg={{ item }} state=present
+  with_items:
+   - http://yum.spacewalkproject.org/2.4/RHEL/7/x86_64/spacewalk-repo-2.4-3.el7.noarch.rpm
+
+- name: Install Spacewalk and necessary packages
+  yum: pkg={{ item }} state=present
+  with_items:
+   - spacewalk-setup-postgresql
+   - spacewalk-postgresql
+   - dhcp
+   - xinetd
+   - syslinux
+   - tftp-server
+   - vsftpd
+
+- name: Setup Spacewalk
+  shell: spacewalk-setup --disconnected --answer-file=/tmp/answers.txt
+  when: spacewalk_installed.stat.exists == false
+
+- name: Copy Centos7 ISO to /var/iso-images
+  copy: src=Centos7_x86_64.iso dest=/var/iso-images
+  when: spacewalk_installed.stat.exists == false
+
+- name: Append mount points to /etc/fstab
+  lineinfile: dest=/etc/fstab
+              insertafter=EOF
+              line="/var/iso-images/Centos7_x86_64.iso /var/satellite/distros/CentosSeven_x86_64 iso9660 ro,loop 0 0"
+              state=present
+
+- name: Run mount command
+  shell: mount -a
+
+- name: Copy DHCPd.conf
+  copy: src=dhcpd.conf  dest=/etc/dhcp/dhcpd.conf
+
+- name: Copy TFTP conf
+  copy: src=tftp dest=/etc/xinetd.d/tftp
+
+- name: Copy files to /var/lib/tftpboot
+  copy: src={{ item }} dest=/var/lib/tftpboot
+  with_items:
+     - pxelinux.0
+     - menu.c32
+     - memdisk
+     - chain.c32
+     - vmlinuz
+     - initrd.img
+
+- name: Ensure dhcpd and Xinted are enabled
+  service: name={{ item }} state=started enabled=yes
+  with_items:
+    - dhcpd
+    - xinetd
+
+

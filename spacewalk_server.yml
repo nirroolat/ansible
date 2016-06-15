@@ -1,0 +1,5 @@
+---
+#Playbook to install Spacewalk Server
+- hosts: spacewalk_server
+  roles:
+     - role: spacewalk_server

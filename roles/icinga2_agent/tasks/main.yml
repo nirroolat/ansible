@@ -1,0 +1,100 @@
+---
+# tasks file for icinga-agent
+- name: Check if Icinga2 has been previouly configured
+  stat: path=/etc/icinga2/pki
+  register: icingainstalledcheck
+
+- name: Register the value of which device needs to be monitored - check_iostat
+  shell: lsblk | grep disk | grep -v "fd0" | awk 'NR==1{print $1}'
+  register: disktobemonitored
+
+- name: Install Icinga2 RPM Key
+  rpm_key: key=http://packages.icinga.org/icinga.key state=present
+
+- name: Install Icinga2 Repo
+  get_url: url=http://packages.icinga.org/epel/ICINGA-release.repo dest=/etc/yum.repos.d/ICINGA-release.repo
+
+- name: Install Icinga2 and necessary packages
+  yum: name={{ item }} state=present
+  with_items:
+    - icinga2
+    - nagios-plugins-all
+    - sysstat
+    - bc
+
+- name: Create /etc/icinga2/pki directory
+  file: path=/etc/icinga2/pki state=directory owner=icinga group=icinga mode=0700
+
+- name: Ensure that /tmp/.traffic is owned by icinga
+  file: path=/tmp/.traffic state=directory owner=icinga group=icinga recurse=yes
+
+- name: Get ticket
+  command: icinga2 pki ticket --cn {{ ansible_nodename }}
+  register: ticket
+  delegate_to: "{{ icinga2_master }}"
+
+- name: Icinga2 new-cert
+  command: icinga2 pki new-cert --cn {{ ansible_nodename }} --key {{ pki_dir }}/{{ ansible_nodename}}.key --cert {{ pki_dir }}/{{ ansible_nodename}}.crt
+  when: icingainstalledcheck.stat.exists == false
+  
+- name: Icinga2 save-cert
+  command: icinga2 pki save-cert --key {{ pki_dir }}/{{ ansible_nodename }}.key --cert {{ pki_dir }}/{{ ansible_nodename }}.crt --trustedcert {{ pki_dir }}/{{ icinga2_master }}.crt --host {{ icinga2_master }}
+ when: icingainstalledcheck.stat.exists == false
+
+- name: Icinga2 pki request
+  command: icinga2 pki request --host {{ icinga2_master }} --port {{ icinga2_port }} --ticket {{ item }} --key {{ pki_dir }}/{{ ansible_nodename }}.key --cert {{ pki_dir }}/{{ ansible_nodename }}.crt --trustedcert {{ pki_dir }}/{{ icinga2_master }}.crt --ca {{ pki_dir }}/ca.crt
+  with_items: '{{ticket.stdout}}'
+  when: icingainstalledcheck.stat.exists == false
+
+- name: Icinga2 node setup
+  shell: icinga2 node setup --ticket {{ item }} --endpoint {{ icinga2_master }} --zone {{ ansible_nodename }} --master_host {{ icinga2_master }} --trustedcert {{ pki_dir }}/{{ icinga2_master }}.crt
+  with_items: '{{ticket.stdout}}'
+  when: icingainstalledcheck.stat.exists == false
+
+- name: Modify zones.conf of all icinga2 client nodes
+  template: src=zones.conf.j2 dest=/etc/icinga2/zones.conf mode=0644 owner=root group=root
+
+- name: Create endpoints/hostname.conf on Icinga2 Master
+  template: src=endpoints.conf.j2 dest=/etc/icinga2/repository.d/endpoints/{{ ansible_nodename }}.conf
+  delegate_to: "{{ icinga2_master }}"
+
+- name: Create zones/hostname.conf on Icinga2 Master
+  template: src=zones.nodes.conf.j2 dest=/etc/icinga2/repository.d/zones/{{ ansible_nodename }}.conf
+  delegate_to: "{{ icinga2_master }}"
+
+- name: Create hosts/hostname.conf on Icinga2 Master
+  template: src=hosts.conf.j2 dest=/etc/icinga2/repository.d/hosts/{{ ansible_nodename }}.conf
+  delegate_to: "{{ icinga2_master }}"
+
+- name: Create hosts/hostname_diretory on Icinga2 Master
+  file: path=/etc/icinga2/repository.d/hosts/{{ ansible_nodename }}
+        state=directory
+        mode=0750
+        owner=icinga
+        group=icinga
+  delegate_to: "{{ icinga2_master }}"
+
+- name: Copy all all check files into /etc/icinga2/repository.d/hosts/{{ ansible_nodename }}
+  template: src=icingachecks/icingachecks.conf.j2 dest=/etc/icinga2/repository.d/hosts/{{ ansible_nodename }}/icingachecks.conf
+  delegate_to: "{{ icinga2_master }}"
+
+- name: Copy additional checks to /usr/lib64/nagios/plugins
+  copy: src={{ item }} dest=/usr/lib64/nagios/plugins mode=0755 owner=root group=root
+  with_fileglob:
+    - check_*
+
+- name: Copy commands.conf.j2 to /etc/icinga2/conf.d/
+  template: src={{ item }} dest=/etc/icinga2/conf.d/commands.conf mode=0640 owner=icinga group=icinga
+  with_items:
+     - commands.conf.j2
+
+- name: Copy services.conf.j2 to /etc/icinga2/conf.d/
+  template: src={{ item }} dest=/etc/icinga2/conf.d/services.conf mode=0640 owner=icinga group=icinga
+  with_items:
+     - services.conf.j2
+
+- name: Enable icinga2 api
+  command: icinga2 enable feature api
+
+- name: Reload icinga2
+  service: name=icinga2 state=reloaded enabled=yes

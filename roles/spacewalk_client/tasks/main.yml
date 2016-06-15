@@ -1,0 +1,93 @@
+---
+#Ansible task for installing spacewalk
+- name: Install necessary RPMs (Spacewalk Repo etc)
+  yum: pkg={{ item }} state=present
+  with_items:
+    - http://yum.spacewalkproject.org/2.3-client/RHEL/7/x86_64/spacewalk-client-repo-2.3-2.el7.noarch.rpm
+    - http://{{ spacewalk_server }}/pub/rhn-org-trusted-ssl-cert-1.0-1.noarch.rpm
+    - http://mirrors.rit.edu/fedora/epel//epel-release-latest-7.noarch.rpm
+    - https://mirror.webtatic.com/yum/el7/webtatic-release.rpm
+    - https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+
+- name: Import Spacewalk RPMs and Atomicorp Repos / Centos EPEL Key
+  rpm_key: key={{ item }} state=present
+  with_items:
+    - http://spacewalk.redhat.com/yum/RPM-GPG-KEY-spacewalk-2014
+    - http://spacewalk.redhat.com/yum/RPM-GPG-KEY-spacewalk-2015
+    - https://www.atomicorp.com/RPM-GPG-KEY.art.txt
+    - https://www.atomicorp.com/RPM-GPG-KEY.atomicorp.txt
+    - http://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7
+
+- name: Copy RHN-ORG-TRUSTED-SSL-CERT
+  template: src=RHN-ORG-TRUSTED-SSL-CERT.j2 dest=/usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT
+
+- name: Install Spacewalk Package and Dependencies (Centos 7)
+  yum: pkg={{ item }} state=present
+  with_items:
+    - libgudev1
+    - libselinux-python
+    - pyOpenSSL
+    - python-gudev
+    - python-hwdata
+    - rhnlib
+    - rhn-client-tools
+    - rhn-check
+    - rhn-setup
+    - rhnsd
+    - m2crypto
+    - yum-rhn-plugin
+    - rhncfg
+    - rhncfg-actions
+    - rhncfg-client
+    - lbzip2
+    - osad
+  when: (ansible_distribution_major_version == "7")
+  notify:
+   - start osad
+
+- name: Install Spacewalk Package and Dependencies (Centos 6)
+  yum: pkg={{ item }} state=present
+  with_items:
+    - libgudev1
+    - libselinux-python
+    - pyOpenSSL
+    - python-gudev
+    - python-hwdata
+    - rhnlib
+    - rhn-client-tools
+    - rhn-check
+    - rhn-setup
+    - rhnsd
+    - m2crypto
+    - yum-rhn-plugin
+    - rhncfg
+    - rhncfg-actions
+    - rhncfg-client
+    - osad
+  when: (ansible_distribution_major_version == "6")
+  notify:
+   - start osad
+
+- name: Disable all repos
+  shell: "{{ item }}"
+  with_items:
+    - /bin/sed -i 's/enabled=1/enabled=0/g' /etc/yum.repos.d/*
+
+- name: Ensure that Centos-Base Repo is disabled for Centos 7 Machines
+  copy: src=CentOS-Base.repo dest=/etc/yum.repos.d/CentOS-Base.repo
+  when: (ansible_distribution_major_version == "7")
+
+- name: Perform RHN_Actions_Control/ Register to Spacewalk (Centos 7 Machines)
+  shell: "{{ item }}"
+  with_items:
+    - /usr/bin/rhn-actions-control --enable-all
+    - /usr/sbin/rhnreg_ks --serverUrl=https://{{ spacewalk_server }}/XMLRPC --sslCACert=/usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT --activationkey={{ spacewalk_activation_key }} --force
+  when: (ansible_distribution_major_version == "7") and (spacewalk_installed.stat.exists == false)
+  tags: register
+
+- name: Perform RHN_Actions_Control/ Register to Spacewalk (Centos 6 Machines)
+  shell: "{{ item }}"
+  with_items:
+    - /usr/bin/rhn-actions-control --enable-all
+    - /usr/sbin/rhnreg_ks --serverUrl=https://{{ spacewalk_server }}/XMLRPC --sslCACert=/usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT --activationkey={{ spacewalk_activation_key }} --force
+  when: (ansible_distribution_major_version == "6") and (spacewalk_installed.stat.exists == false)

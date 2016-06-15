@@ -1,0 +1,103 @@
+---
+# tasks file for icinga2_server
+- name: Install Icinga2 repo
+  yum: name=https://packages.icinga.org/epel/7/release/noarch/icinga-rpm-release-7-1.el7.centos.noarch.rpm state=present
+
+- name: Install RPM Key
+  rpm_key: key=http://packages.icinga.org/icinga.key state=present
+
+- name: Install Icinga2 and necessary plugins
+  yum: name={{ item }} state=present
+  with_items:
+    - icinga2
+    - icingaweb2
+    - icinga2-ido-mysql
+    - nagios-plugins-all
+    - httpd
+    - mod_ssl
+    - icingacli
+    - php70w-ldap
+    - php70w-gd
+    - php70w-intl
+    - perl-Net-SNMP
+
+- name: Enable Icinga Feature - command
+  command: icinga2 feature enable command
+
+- name: Enable Icinga Feature ido-mysql
+  command: icinga2 feature enable ido-mysql
+
+- name: Enable Icinga Feature api
+  command: icinga2 feature enable api
+
+- name: Enable Icinga Feature checker
+  command: icinga2 feature enable checker
+
+- name: Enable Icinga Feature graphite
+  command: icinga2 feature enable graphite
+
+- name: Enable Icinga Feature notification
+  command: icinga2 feature enable notification
+
+- name: Enable Icinga Feature perfdata
+  command: icinga2 feature enable perfdata
+
+- name: Create icingaweb2 group
+  group: name=icingaweb2 state=present
+
+- name: Add icingaweb2 to apache
+  user: name=apache groups=icingaweb2 append=yes
+
+- name: Copy icingaweb2 ini files to /etc/icingaweb2
+  copy: src={{ item }} dest=/etc/icingaweb2/ mode=0660 owner=apache group=icingaweb2
+  with_items:
+    - authentication.ini
+    - roles.ini
+    - config.ini
+    - resources.ini
+    - groups.ini
+  notify:
+    - restart icinga2
+
+- name: Create /etc/icinga2/modules/monitoring directory
+  file: path=/etc/icingaweb2/modules/monitoring state=directory mode=2770 owner=apache group=icingaweb2
+
+- name: Create the following directories in /etc/icinga2/repository.d
+  file: path=/etc/icinga2/repository.d/{{ item }} state=directory mode=0755 owner=root group=root
+  with_items:
+    - endpoints
+    - hosts
+    - zones
+
+- name: Copy monitoring ini files to /etc/icinga2/modules/monitoring
+  copy: src=monitoring/{{ item }} dest=/etc/icingaweb2/modules/monitoring/ mode=0660 owner=apache group=icingaweb2
+  with_items:
+    - backends.ini
+    - config.ini
+    - commandtransports.ini
+  notify:
+    - restart icinga2
+
+- name: Copy sendEmail to /usr/local/bin
+  copy: src=sendEmail dest=/usr/local/bin/ mode=0755 owner=root group=root
+  notify:
+    - restart icinga2
+
+- name: Copy mail-notifciations.sh to /etc/icinga2/scripts
+  copy: src={{ item }} dest=/etc/icinga2/scripts mode=0755 owner=root group=root
+  with_items:
+    - mail-host-notification.sh
+    - mail-service-notification.sh
+  notify:
+    - restart icinga2
+
+- name: Copy users.conf to /etc/icinga2/conf.d/
+  copy: src=users.conf dest=/etc/icinga2/conf.d/users.conf mode=0640 owner=icinga group=icinga
+  notify:
+    - restart icinga2
+
+- name: Copy ido-mysql.conf to /etc/icinga2/features-available/
+  copy: src=ido-mysql.conf dest=/etc/icinga2/features-available/ido-mysql.conf mode=0640 owner=icinga group=icinga
+  notify:
+   - restart icinga2
+

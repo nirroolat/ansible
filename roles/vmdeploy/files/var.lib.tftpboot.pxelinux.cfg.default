@@ -1,0 +1,21 @@
+DEFAULT menu
+PROMPT 0
+MENU TITLE Cobbler | http://fedorahosted.org/cobbler
+TIMEOUT 20
+TOTALTIMEOUT 6000
+ONTIMEOUT centos7_kickstart_lvm:1:SpacewalkDefaultOrganization
+
+LABEL local
+        MENU LABEL (local)
+        MENU DEFAULT
+        LOCALBOOT 0
+
+LABEL centos7_kickstart_lvm:1:SpacewalkDefaultOrganization
+        kernel /images/centos_7_dg_x86_64:1:SpacewalkDefaultOrganization/vmlinuz
+        MENU LABEL centos7_kickstart_lvm:1:SpacewalkDefaultOrganization
+        append initrd=/images/centos_7_dg_x86_64:1:SpacewalkDefaultOrganization/initrd.img ksdevice=bootif lang=  kssendmac text  ks=http://192.168.2.56/cblr/svc/op/ks/profile/centos7_kickstart_lvm:1:SpacewalkDefaultOrganization
+        ipappend 2
+
+
+
+MENU end

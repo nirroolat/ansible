@@ -1,0 +1,9 @@
+---
+#Playbook to install SpacewalkClient
+- hosts: spacewalk_client
+  pre_tasks:
+    - stat: path=/usr/sbin/osad
+      register: spacewalk_installed
+      tags: register
+  roles:
+     - role: spacewalk_client

@@ -1,0 +1,72 @@
+---
+# tasks file for graphite
+- name: Install necessary packages for Graphite
+  yum: name={{ item }} state=present
+  with_items:
+    - httpd
+    - net-snmp
+    - perl
+    - pycairo
+    - mod_wsgi
+    - python-devel
+    - git
+    - gcc-c++
+    - python-pip
+    - npm
+    - collectd
+    - collectd-snmp
+
+- name: Install Python packages via pip
+  pip: name={{ item }} state=present
+  with_items:
+    - django<1.6
+    - Twisted<12
+    - django-tagging<0.3.6
+    - whisper
+    - graphite-web
+    - carbon
+
+- name: Git pull https://github.com/etsy/statsd.git /usr/local/src/statsd/
+  git: repo=https://github.com/etsy/statsd.git dest=/usr/local/src/statsd
+
+- name: Perform the following commands
+  copy: src={{ item }} dest=/opt/graphite/conf/
+  with_items:
+    - storage-schemas.conf
+    - storage-aggregation.conf
+    - graphite.wsgi
+    - graphTemplates.conf
+    - carbon.conf
+
+- name: Create /etc/icingaweb2/modules/graphite
+  file: path=/etc/icingaweb2/modules/graphite state=directory
+
+- name: Copy graphite.ini to /etc/icingaweb2/modules/graphite/config.ini
+  copy: src=graphite.config.ini 
+        dest=/etc/icingaweb2/modules/graphite/config.ini
+        mode=0644
+        owner=root
+        group=icingaweb2
+
+- name: Ensure that /opt/graphite/storage/ is owned by apache
+  file: path=/opt/graphite/storage state=directory owner=apache group=apache
+
+- name: Perform the following commands
+  copy: src={{ item }} dest=/etc/httpd/conf.d/
+  with_items:
+    - graphite.conf
+
+- name: Create super-user in graphite
+  expect:
+    command: python /opt/graphite/webapp/graphite/manage.py syncdb
+    responses:
+        '(yes/no)': 'yes'
+        '(?i)Username': 'root'
+        '(?i)Email': 'INSERT@YOUREMAIL.ADDRESS'
+  tags: super
+
+- name: Start carbon collector
+  command: service carbon-cache start
+
+- name: Start graphite
+  command: python /opt/graphite/bin/run-graphite-devel-server.py /opt/graphite/ &

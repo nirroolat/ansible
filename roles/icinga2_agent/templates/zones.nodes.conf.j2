@@ -1,0 +1,4 @@
+object Zone "{{ ansible_nodename }}" {
+        endpoints = [ "{{ ansible_nodename }}" ]
+        parent = "{{ icinga2_master }}"
+}
