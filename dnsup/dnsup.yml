@@ -1,0 +1,13 @@
+---
+#Updates routes 53 value for vpn.nirro.net
+- hosts: localhost
+  gather_facts: false
+  connection: local
+
+  pre_tasks:
+  - name: Get IP Address
+    shell: curl https://wtfismyip.com/text
+    register: ipv4address
+
+  roles:
+    - role: aws-route53-dnsup

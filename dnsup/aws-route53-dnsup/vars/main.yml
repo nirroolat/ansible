@@ -1,0 +1,6 @@
+---
+# vars file for route53dnsup
+route53_access_key: INSERT YOUR ACCESS KEY HERE
+route53_secret_key: INSERT YOUR SECRET KEY HERE
+hostedzone: YOUR ROUTE 53 HOSTED ZONE
+dnsrecordtoupdate: THE DNS RECORD YOU WANT TO UPDATE
