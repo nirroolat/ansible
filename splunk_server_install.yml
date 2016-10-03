@@ -1,0 +1,25 @@
+ - hosts: splunkserver
+   tasks:
+    - name: Check if Splunk is installed (Checks if Splunk Directory is present)
+      stat: path=/opt/splunk
+      register: splunk_installed
+
+    - name: Copy Splunk RPM to destination
+      copy: src=/home/nirro/ansible/playbooks/configfiles/splunklight-6.2.5-272645-linux-2.6-x86_64.rpm dest=/tmp
+      when: splunk_installed.stat.exists == false
+
+    - name: Install Splunk
+      shell: rpm -U /tmp/splunklight-6.2.5-272645-linux-2.6-x86_64.rpm
+      when: splunk_installed.stat.exists == false
+
+    - name: Start Splunk
+      shell: /opt/splunk/bin/splunk start --accept-license
+      when: splunk_installed.stat.exists == false    
+ 
+    - name: Enable Splunk at Boot
+      shell: /opt/splunk/bin/splunk enable boot-start
+      when: splunk_installed.stat.exists == false
+
+    - name: Enable Splunk to listen on Port 9997 and set Admin creds
+      shell: /opt/splunk/bin/splunk enable listen 9997 -auth {{ splunk_user}}:{{ splunk_password }}
+      when: splunk_installed.stat.exists == false
