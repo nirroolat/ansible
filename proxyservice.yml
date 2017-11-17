@@ -21,3 +21,6 @@
      service: name=icinga2
               enabled=yes
               state=started
+
+   - name: Echo parameter into /tmp
+     shell: echo "{{ssm: /Test/helloWorld }}" >> /tmp/hello.txt
