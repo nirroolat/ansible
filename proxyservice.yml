@@ -1,0 +1,23 @@
+---
+### Playbook for SSM
+ - hosts: all
+   become: true
+   tasks:
+   - name: gather ec2 facts
+     action: ec2_facts
+
+   - name: Install Apache
+     yum: name=httpd state=present
+  
+   - name: Start apache and enable on boot
+     service: name=httpd enabled=yes state=started
+
+   - name: Ensure that ossec is started
+     service: name=ossec-hids
+              enabled=yes
+              state=started
+ 
+   - name: Ensure that icinga2 is running
+     service: name=icinga2
+              enabled=yes
+              state=started
