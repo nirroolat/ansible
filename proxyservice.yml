@@ -22,5 +22,5 @@
               enabled=yes
               state=started
 
-   - name: Echo parameter into /tmp
-     command: echo {{ssm:/Test/helloWorld}} >> /tmp/hello.txt
+   - name: debug
+     debug: msg="{{ lookup('ssm', 'helloWorld' ) }}"
