@@ -23,4 +23,4 @@
               state=started
 
    - name: debug
-     debug: msg="{{ lookup('ssm', '/Test/helloWorld' ) }}"
+     debug: msg="{{ lookup('aws_ssm', '/Test/helloWorld' ) }}"
