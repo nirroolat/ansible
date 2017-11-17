@@ -23,4 +23,4 @@
               state=started
 
    - name: Echo parameter into /tmp
-     shell: echo "{{ssm: /Test/helloWorld }}" >> /tmp/hello.txt
+     shell: echo {{ssm:/Test/helloWorld}} >> /tmp/hello.txt
